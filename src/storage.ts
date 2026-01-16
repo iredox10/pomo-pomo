@@ -1,13 +1,15 @@
 export type TimerMode = 'focus' | 'shortBreak' | 'longBreak';
 export type TimerStatus = 'idle' | 'running' | 'paused';
+export type TimerType = 'timer' | 'stopwatch';
 
 export interface TimerState {
   status: TimerStatus;
   startTime: number | null; // Timestamp when timer started/resumed
-  duration: number; // Duration in minutes
+  duration: number; // Duration in minutes (target for timer, unused for stopwatch?)
   mode: TimerMode;
-  timeLeft: number; // Remaining seconds when paused or initially
+  timeLeft: number; // Remaining seconds (timer) OR Elapsed seconds (stopwatch)
   activeTaskId: string | null;
+  type: TimerType;
 }
 
 export interface Task {
@@ -26,6 +28,8 @@ export interface Settings {
   autoStartBreaks: boolean;
   autoStartPomos: boolean;
   soundEnabled: boolean;
+  strictMode: boolean;
+  blockedSites: string[];
 }
 
 export interface SessionLog {
@@ -50,6 +54,8 @@ export const defaultSettings: Settings = {
   autoStartBreaks: false,
   autoStartPomos: false,
   soundEnabled: true,
+  strictMode: false,
+  blockedSites: ['facebook.com', 'twitter.com', 'youtube.com', 'instagram.com', 'reddit.com'],
 };
 
 export const defaultTimer: TimerState = {
@@ -59,15 +65,16 @@ export const defaultTimer: TimerState = {
   mode: 'focus',
   timeLeft: 25 * 60,
   activeTaskId: null,
+  type: 'timer',
 };
 
 export function getStorage(): Promise<LocalStorage> {
   return new Promise((resolve) => {
     chrome.storage.local.get(null, (result) => {
       resolve({
-        timer: result.timer ?? defaultTimer,
+        timer: { ...defaultTimer, ...(result.timer || {}) },
         tasks: result.tasks ?? [],
-        settings: result.settings ?? defaultSettings,
+        settings: { ...defaultSettings, ...(result.settings || {}) },
         history: result.history ?? [],
       } as LocalStorage);
     });

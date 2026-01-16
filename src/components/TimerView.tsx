@@ -1,12 +1,12 @@
 import { usePomodoro } from '../hooks/usePomodoro';
 import { useTasks } from '../hooks/useTasks';
-import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
+import { Play, Pause, RotateCcw, SkipForward, Timer as TimerIcon, Watch } from 'lucide-react';
 import clsx from 'clsx';
 import { TimerMode } from '../storage';
 import { useEffect } from 'react';
 
 export function TimerView() {
-  const { timer, timeLeft, startTimer, pauseTimer, resetTimer, setMode } = usePomodoro();
+  const { timer, timeLeft, startTimer, pauseTimer, resetTimer, setMode, setType } = usePomodoro();
   const { tasks, activeTaskId } = useTasks();
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
@@ -34,7 +34,10 @@ export function TimerView() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const progress = (timeLeft / (timer.duration * 60)) * 100;
+  const isTimer = timer.type === 'timer';
+  const progress = isTimer 
+    ? (timeLeft / (timer.duration * 60)) * 100
+    : 100; // Stopwatch full circle or pulsing? Let's keep it full.
   
   // Circle Math
   const radius = 120;
@@ -50,8 +53,26 @@ export function TimerView() {
   return (
     <div className="flex flex-col items-center justify-center h-full bg-gray-900 text-white p-6 relative">
       
-      {/* Mode Toggles */}
-      <div className="flex gap-2 mb-8 bg-gray-800 p-1 rounded-xl">
+      {/* Timer Type Toggle */}
+      <div className="absolute top-4 right-4 flex bg-gray-800 rounded-lg p-1">
+        <button 
+            onClick={() => setType('timer')}
+            className={clsx("p-1.5 rounded transition-colors", isTimer ? "bg-gray-700 text-white" : "text-gray-400 hover:text-gray-200")}
+            title="Timer Mode"
+        >
+            <TimerIcon className="w-4 h-4" />
+        </button>
+        <button 
+            onClick={() => setType('stopwatch')}
+            className={clsx("p-1.5 rounded transition-colors", !isTimer ? "bg-gray-700 text-white" : "text-gray-400 hover:text-gray-200")}
+            title="Stopwatch Mode"
+        >
+            <Watch className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Mode Toggles (Only visible in Timer Mode) */}
+      <div className={clsx("flex gap-2 mb-8 bg-gray-800 p-1 rounded-xl transition-opacity", !isTimer && "opacity-0 pointer-events-none")}>
         {modes.map(mode => (
           <button
             key={mode.id}
@@ -90,7 +111,8 @@ export function TimerView() {
             strokeLinecap="round"
             className={clsx(
               "transition-all duration-1000 ease-linear",
-              timer.mode === 'focus' ? "text-blue-500" : "text-green-500"
+              timer.mode === 'focus' ? "text-blue-500" : "text-green-500",
+              !isTimer && timer.status === 'running' && "animate-pulse" // Subtle pulse for stopwatch
             )}
           />
         </svg>
@@ -99,7 +121,7 @@ export function TimerView() {
             {formatTime(timeLeft)}
           </span>
           <span className="text-gray-400 mt-2 text-sm uppercase tracking-widest font-medium">
-            {timer.status === 'running' ? (timer.mode === 'focus' ? 'Focusing' : 'Break') : 'Paused'}
+            {!isTimer ? 'Stopwatch' : (timer.status === 'running' ? (timer.mode === 'focus' ? 'Focusing' : 'Break') : 'Paused')}
           </span>
         </div>
       </div>
@@ -141,10 +163,10 @@ export function TimerView() {
           )}
         </button>
 
-        {/* Skip/Finish Button */}
+        {/* Skip/Finish Button - Only for Timer */}
          <button
-            onClick={() => chrome.alarms.create('pomodoro-timer', { when: Date.now() + 100 })} 
-            className="p-4 rounded-full bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white transition-all"
+            onClick={() => isTimer ? chrome.alarms.create('pomodoro-timer', { when: Date.now() + 100 }) : resetTimer()} 
+            className={clsx("p-4 rounded-full bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white transition-all", !isTimer && "invisible")}
             title="Skip / Finish"
          >
             <SkipForward className="w-6 h-6" />

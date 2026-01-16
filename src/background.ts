@@ -63,8 +63,6 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
     if (isFocus) {
         // Focus -> Break
-        // Simple logic: every 4th pomo could be a long break, but for now let's default to Short Break
-        // unless the user manually selected Long Break previously? No, let's standard flow: Focus -> Short Break
         nextMode = 'shortBreak';
         nextDuration = settings.shortBreakDuration;
         shouldAutoStart = settings.autoStartBreaks;
@@ -87,18 +85,39 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
     // If auto-starting, we need to set the new alarm immediately
     if (shouldAutoStart) {
-        // Clear old alarm just in case
         await chrome.alarms.clear(ALARM_NAME);
         const fireDate = Date.now() + (nextDuration * 60 * 1000);
         await chrome.alarms.create(ALARM_NAME, { when: fireDate });
     }
 
     await setStorage({
-      timer: newTimerState as any, // TS Cast for safety if needed
+      timer: newTimerState as any, 
       history: newHistory,
       tasks: newTasks
     });
   }
+});
+
+// Strict Mode: Site Blocking
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete' && tab.url) {
+        const { settings, timer } = await getStorage();
+        
+        // Only block if Strict Mode ON AND Timer is Running AND Mode is Focus
+        if (settings.strictMode && timer.status === 'running' && timer.mode === 'focus') {
+            const domain = new URL(tab.url).hostname;
+            
+            const isBlocked = settings.blockedSites.some(site => domain.includes(site));
+            
+            if (isBlocked) {
+                // Redirect to blocked page
+                const blockedPage = chrome.runtime.getURL('blocked.html');
+                if (tab.url !== blockedPage) {
+                    chrome.tabs.update(tabId, { url: blockedPage });
+                }
+            }
+        }
+    }
 });
 
 // Audio Offscreen Management
