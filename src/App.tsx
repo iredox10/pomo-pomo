@@ -3,10 +3,11 @@ import { TimerView } from './components/TimerView';
 import { TaskView } from './components/TaskView';
 import { StatsView } from './components/StatsView';
 import { SettingsView } from './components/SettingsView';
-import { Timer, CheckSquare, BarChart2, Settings } from 'lucide-react';
+import { AlarmsView } from './components/AlarmsView';
+import { Timer, CheckSquare, BarChart2, Settings, AlarmClock } from 'lucide-react';
 import clsx from 'clsx';
 
-export type View = 'timer' | 'tasks' | 'stats' | 'settings';
+export type View = 'timer' | 'tasks' | 'alarms' | 'stats' | 'settings';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('timer');
@@ -15,6 +16,7 @@ function App() {
     switch (currentView) {
       case 'timer': return <TimerView />;
       case 'tasks': return <TaskView onNavigate={setCurrentView} />;
+      case 'alarms': return <AlarmsView />;
       case 'stats': return <StatsView />;
       case 'settings': return <SettingsView />;
       default: return <TimerView />;
@@ -24,6 +26,7 @@ function App() {
   const navItems: { id: View; icon: React.ElementType; label: string }[] = [
     { id: 'timer', icon: Timer, label: 'Focus' },
     { id: 'tasks', icon: CheckSquare, label: 'Tasks' },
+    { id: 'alarms', icon: AlarmClock, label: 'Alarms' },
     { id: 'stats', icon: BarChart2, label: 'Stats' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];

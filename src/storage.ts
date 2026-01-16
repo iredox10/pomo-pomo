@@ -1,6 +1,7 @@
 export type TimerMode = 'focus' | 'shortBreak' | 'longBreak';
 export type TimerStatus = 'idle' | 'running' | 'paused';
 export type TimerType = 'timer' | 'stopwatch';
+export type RecurrenceType = 'once' | 'hourly' | 'daily' | 'weekly' | 'monthly';
 
 export interface TimerState {
   status: TimerStatus;
@@ -21,6 +22,14 @@ export interface Task {
   actualPomos: number;
   createdAt: number;
   duration?: number; // Target duration in minutes for this task
+}
+
+export interface Alarm {
+  id: string;
+  time: number; // Timestamp for the next occurrence (or base time for recurring)
+  label: string;
+  recurrence: RecurrenceType;
+  enabled: boolean;
 }
 
 export interface Settings {
@@ -45,6 +54,7 @@ export interface SessionLog {
 export interface LocalStorage {
   timer: TimerState;
   tasks: Task[];
+  alarms: Alarm[];
   settings: Settings;
   history: SessionLog[];
 }
@@ -77,6 +87,7 @@ export function getStorage(): Promise<LocalStorage> {
       resolve({
         timer: { ...defaultTimer, ...(result.timer || {}) },
         tasks: result.tasks ?? [],
+        alarms: result.alarms ?? [],
         settings: { ...defaultSettings, ...(result.settings || {}) },
         history: result.history ?? [],
       } as LocalStorage);
