@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTasks } from '../hooks/useTasks';
-import { CheckCircle2, Circle, Plus, Trash2, Play, Pause, Timer as TimerIcon, Pencil, X, Check } from 'lucide-react';
+import { usePomodoro } from '../hooks/usePomodoro';
+import { CheckCircle2, Circle, Plus, Trash2, Play, Pause, Timer as TimerIcon, Pencil, X, Check, Clock } from 'lucide-react';
 import clsx from 'clsx';
 import { View } from '../App';
 
@@ -10,24 +11,28 @@ interface TaskViewProps {
 
 export function TaskView({ onNavigate }: TaskViewProps) {
   const { tasks, activeTaskId, addTask, updateTask, deleteTask, setActiveTask } = useTasks();
+  const { startTask } = usePomodoro();
   
   // Create State
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskPomos, setNewTaskPomos] = useState(1);
+  const [newTaskDuration, setNewTaskDuration] = useState<number | undefined>(undefined); // Optional custom duration
   const [isAdding, setIsAdding] = useState(false);
 
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editPomos, setEditPomos] = useState(1);
+  const [editDuration, setEditDuration] = useState<number | undefined>(undefined);
 
   // Create Handlers
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
-    addTask(newTaskTitle, newTaskPomos);
+    addTask(newTaskTitle, newTaskPomos, newTaskDuration);
     setNewTaskTitle('');
     setNewTaskPomos(1);
+    setNewTaskDuration(undefined);
     setIsAdding(false);
   };
 
@@ -36,25 +41,31 @@ export function TaskView({ onNavigate }: TaskViewProps) {
     setEditingId(task.id);
     setEditTitle(task.title);
     setEditPomos(task.estimatedPomos);
+    setEditDuration(task.duration);
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditTitle('');
     setEditPomos(1);
+    setEditDuration(undefined);
   };
 
   const saveEditing = (id: string) => {
     if (!editTitle.trim()) return;
-    updateTask(id, { title: editTitle, estimatedPomos: editPomos });
+    updateTask(id, { 
+        title: editTitle, 
+        estimatedPomos: editPomos,
+        duration: editDuration
+    });
     setEditingId(null);
   };
 
-  const handlePlayClick = (taskId: string) => {
+  const handlePlayClick = async (taskId: string) => {
     if (activeTaskId === taskId) {
-       setActiveTask(null);
+       await setActiveTask(null);
     } else {
-       setActiveTask(taskId);
+       await startTask(taskId);
        if (onNavigate) {
          onNavigate('timer');
        }
@@ -84,10 +95,10 @@ export function TaskView({ onNavigate }: TaskViewProps) {
             className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 outline-none focus:border-blue-500 mb-3"
           />
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-4 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
                 <TimerIcon className="w-4 h-4" />
-                <span>Est. Pomodoros:</span>
+                <span className="text-xs">Pomos:</span>
                 <input 
                     type="number" 
                     min="1" 
@@ -97,10 +108,24 @@ export function TaskView({ onNavigate }: TaskViewProps) {
                     className="w-12 bg-gray-900 border border-gray-700 rounded p-1 text-center focus:border-blue-500 outline-none"
                 />
             </div>
+
+            <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span className="text-xs">Min:</span>
+                <input 
+                    type="number" 
+                    min="1" 
+                    max="120"
+                    placeholder="25"
+                    value={newTaskDuration || ''}
+                    onChange={(e) => setNewTaskDuration(e.target.value ? parseInt(e.target.value) : undefined)}
+                    className="w-12 bg-gray-900 border border-gray-700 rounded p-1 text-center focus:border-blue-500 outline-none"
+                />
+            </div>
             
             <button 
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ml-auto"
             >
                 Save
             </button>
@@ -128,16 +153,30 @@ export function TaskView({ onNavigate }: TaskViewProps) {
                         autoFocus
                     />
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                            <TimerIcon className="w-3 h-3" />
-                            <input 
-                                type="number" 
-                                min="1" 
-                                max="20"
-                                value={editPomos}
-                                onChange={(e) => setEditPomos(parseInt(e.target.value) || 1)}
-                                className="w-10 bg-gray-900 border border-gray-700 rounded p-1 text-center focus:border-blue-500 outline-none"
-                            />
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                            <div className="flex items-center gap-1">
+                                <TimerIcon className="w-3 h-3" />
+                                <input 
+                                    type="number" 
+                                    min="1" 
+                                    max="20"
+                                    value={editPomos}
+                                    onChange={(e) => setEditPomos(parseInt(e.target.value) || 1)}
+                                    className="w-10 bg-gray-900 border border-gray-700 rounded p-1 text-center focus:border-blue-500 outline-none"
+                                />
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                <input 
+                                    type="number" 
+                                    min="1" 
+                                    max="120"
+                                    value={editDuration || ''}
+                                    placeholder="25"
+                                    onChange={(e) => setEditDuration(e.target.value ? parseInt(e.target.value) : undefined)}
+                                    className="w-10 bg-gray-900 border border-gray-700 rounded p-1 text-center focus:border-blue-500 outline-none"
+                                />
+                            </div>
                         </div>
                         <div className="flex gap-2">
                             <button onClick={cancelEditing} className="p-1.5 hover:bg-gray-700 rounded text-gray-400"><X className="w-4 h-4"/></button>
@@ -167,13 +206,21 @@ export function TaskView({ onNavigate }: TaskViewProps) {
                 <span className={clsx("block truncate select-none", task.completed && "line-through text-gray-500")}>
                     {task.title}
                 </span>
-                <div className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
-                    <span className={clsx(task.actualPomos >= task.estimatedPomos ? "text-green-400" : "text-gray-400")}>
-                        {task.actualPomos}
-                    </span>
-                    <span className="text-gray-600">/</span>
-                    <span className="text-gray-400">{task.estimatedPomos}</span>
-                    <TimerIcon className="w-3 h-3 text-gray-600 ml-1" />
+                <div className="text-xs text-gray-500 mt-0.5 flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                        <span className={clsx(task.actualPomos >= task.estimatedPomos ? "text-green-400" : "text-gray-400")}>
+                            {task.actualPomos}
+                        </span>
+                        <span className="text-gray-600">/</span>
+                        <span className="text-gray-400">{task.estimatedPomos}</span>
+                        <TimerIcon className="w-3 h-3 text-gray-600" />
+                    </div>
+                    {task.duration && (
+                        <div className="flex items-center gap-1 text-gray-500">
+                            <span>{task.duration}m</span>
+                            <Clock className="w-3 h-3" />
+                        </div>
+                    )}
                 </div>
                 </div>
 

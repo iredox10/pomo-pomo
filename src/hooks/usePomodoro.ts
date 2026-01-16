@@ -131,9 +131,47 @@ export function usePomodoro() {
         duration: newDuration,
         timeLeft: latestTimer.type === 'timer' ? newDuration * 60 : 0,
         mode: mode,
-        activeTaskId: null
+        // activeTaskId: null // Don't clear task on mode switch
       }
     });
+  };
+
+  const startTask = async (taskId: string | null) => {
+      const { settings, timer: latestTimer, tasks } = await getStorage();
+      
+      let newDuration = settings.focusDuration;
+      // If we are starting a specific task, check if it has a custom duration
+      if (taskId) {
+          const task = tasks.find(t => t.id === taskId);
+          if (task && task.duration && task.duration > 0) {
+              newDuration = task.duration;
+          }
+      }
+      
+      await setStorage({
+          timer: {
+              ...latestTimer,
+              type: 'timer', // Force timer mode for tasks usually
+              status: 'idle', // Or 'running' if we want auto-play
+              startTime: null,
+              duration: newDuration,
+              timeLeft: newDuration * 60,
+              mode: 'focus',
+              activeTaskId: taskId
+          }
+      });
+      // Update local state immediately for responsiveness
+      setTimer(prev => ({
+          ...prev,
+          type: 'timer',
+          status: 'idle',
+          startTime: null,
+          duration: newDuration,
+          timeLeft: newDuration * 60,
+          mode: 'focus',
+          activeTaskId: taskId
+      }));
+      setDisplayTime(newDuration * 60);
   };
 
   const setType = async (type: TimerType) => {
@@ -162,5 +200,6 @@ export function usePomodoro() {
     resetTimer,
     setMode,
     setType,
+    startTask
   };
 }

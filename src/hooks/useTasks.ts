@@ -28,14 +28,15 @@ export function useTasks() {
     return () => chrome.storage.onChanged.removeListener(listener);
   }, []);
 
-  const addTask = async (title: string, estimatedPomos: number = 1) => {
+  const addTask = async (title: string, estimatedPomos: number = 1, duration?: number) => {
     const newTask: Task = {
       id: crypto.randomUUID(),
       title,
       completed: false,
       estimatedPomos,
       actualPomos: 0,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      duration
     };
     
     const { tasks: currentTasks } = await getStorage();

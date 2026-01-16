@@ -19,6 +19,7 @@ export interface Task {
   estimatedPomos: number;
   actualPomos: number;
   createdAt: number;
+  duration?: number; // Target duration in minutes for this task
 }
 
 export interface Settings {
