@@ -1,21 +1,39 @@
+let currentAudio: HTMLAudioElement | null = null;
+let stopTimeout: ReturnType<typeof setTimeout> | null = null;
+
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'PLAY_SOUND') {
     playSound(msg.payload.sound);
+  } else if (msg.type === 'STOP_SOUND') {
+    stopSound();
   }
 });
 
+function stopSound() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  if (stopTimeout) {
+    clearTimeout(stopTimeout);
+    stopTimeout = null;
+  }
+}
+
 function playSound(source: string) {
-  // Use a CDN or local file. For a real extension, these should be local assets.
-  // I'll use placeholders or online URLs for the prototype if local assets aren't there yet.
-  // But the plan says "Assets" is task 19. I'll assume local paths and just log errors if missing.
-  // Ideally, I should place some dummy mp3 files in public/ later.
-  
+  // Optional: Stop previous sound if you don't want overlap
+  stopSound(); 
+
   let audioUrl = '';
+  let loop = false;
+  let duration = 0;
+
   switch (source) {
     case 'alarm':
       audioUrl = chrome.runtime.getURL('assets/alarm.mp3'); 
-      // Fallback to a simple beep data URI if file missing (for testing)
-      // audioUrl = 'https://actions.google.com/sounds/v1/alarms/beep_short.ogg';
+      loop = true;
+      duration = 50000; // 50 seconds
       break;
     case 'white-noise':
       audioUrl = chrome.runtime.getURL('assets/white-noise.mp3');
@@ -26,5 +44,15 @@ function playSound(source: string) {
 
   const audio = new Audio(audioUrl);
   audio.volume = 1.0;
+  audio.loop = loop;
+  
   audio.play().catch(err => console.error("Audio play failed:", err));
+  
+  currentAudio = audio;
+
+  if (duration > 0) {
+    stopTimeout = setTimeout(() => {
+      stopSound();
+    }, duration);
+  }
 }
