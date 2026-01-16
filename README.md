@@ -1,73 +1,99 @@
-# React + TypeScript + Vite
+# TickTick Pomodoro Extension
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A feature-rich, beautiful Pomodoro timer extension for Chrome, inspired by TickTick's Focus features. Built with React, Vite, Tailwind CSS, and Manifest V3.
 
-Currently, two official plugins are available:
+![TickTick Pomodoro Screenshot](public/icons/icon128.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## React Compiler
+### ⏱️ Advanced Timer
+*   **Flexible Modes:** Focus, Short Break, and Long Break intervals.
+*   **Stopwatch Mode:** Count-up timer for open-ended sessions.
+*   **Smart Auto-Start:** Configurable options to auto-start breaks or the next focus session.
+*   **Custom Durations:** Set global defaults for all timer modes.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### ✅ Task Management
+*   **Task List:** Create, edit, and delete tasks directly within the extension.
+*   **Task Linking:** Select a task to focus on, and the timer tracks time specifically for that task.
+*   **Estimations:** Set estimated Pomodoros for each task.
+*   **Custom Task Durations:** Override global timer settings with specific durations for individual tasks (e.g., set a "Deep Work" task to 60 mins).
 
-## Expanding the ESLint configuration
+### 🛡️ Strict Mode
+*   **Site Blocking:** Voluntarily block distracting websites (like social media) while the Focus timer is running.
+*   **Redirect Page:** Attempts to visit blocked sites are redirected to a motivational "Get Back to Work" page.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 📊 Statistics
+*   **Daily Tracking:** View total focus time for the day.
+*   **Weekly Insights:** 7-day bar chart visualization of your productivity.
+*   **Session History:** Detailed logs of every completed session.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 🎨 Modern UI/UX
+*   **Dark Mode:** Sleek, battery-saving dark interface.
+*   **Visual Timer:** Beautiful circular progress indicator with smooth animations.
+*   **Responsive:** Optimized for the Chrome extension popup size.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🛠️ Tech Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+*   **Frontend:** [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+*   **Build Tool:** [Vite](https://vitejs.dev/)
+*   **Styling:** [Tailwind CSS](https://tailwindcss.com/) (v4)
+*   **Icons:** [Lucide React](https://lucide.dev/)
+*   **Charts:** [Recharts](https://recharts.org/)
+*   **Platform:** Chrome Extension [Manifest V3](https://developer.chrome.com/docs/extensions/mv3/intro/)
+*   **Package Manager:** [Bun](https://bun.sh/) (Compatible with npm/yarn/pnpm)
+
+## 📦 Installation
+
+### From Source
+1.  Clone this repository:
+    ```bash
+    git clone https://github.com/yourusername/ticktick-pomodoro-extension.git
+    cd ticktick-pomodoro-extension
+    ```
+2.  Install dependencies:
+    ```bash
+    bun install
+    # or npm install
+    ```
+3.  Build the extension:
+    ```bash
+    bun run build
+    # or npm run build
+    ```
+4.  Load into Chrome:
+    *   Open Chrome and navigate to `chrome://extensions`.
+    *   Enable **Developer mode** (top right toggle).
+    *   Click **Load unpacked**.
+    *   Select the `dist` folder generated in your project directory.
+
+## 💻 Development
+
+To run the project in development mode (watch for changes):
+
+```bash
+bun run dev
+# Note: Since this is a browser extension, 'vite dev' is less useful than 'vite build --watch' 
+# for testing the actual extension context.
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+For actual extension development, it is recommended to run the build command and reload the extension in Chrome.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🧩 Project Structure
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+*   `src/background.ts`: Service worker handling timer logic, alarms, notifications, and site blocking.
+*   `src/offscreen.ts`: Hidden document for playing audio (workaround for Manifest V3 background script limitations).
+*   `src/components`: React components for Timer, Tasks, Stats, and Settings views.
+*   `src/hooks`: Custom hooks (`usePomodoro`, `useTasks`) managing `chrome.storage` state.
+*   `manifest.json`: Extension configuration and permissions.
+
+## 🔒 Permissions Used
+
+*   `storage`: Saving tasks, settings, and timer state locally.
+*   `alarms`: Accurate timer execution in the background.
+*   `notifications`: System alerts when a timer finishes.
+*   `offscreen`: Playing white noise and alarm sounds.
+*   `tabs`: Monitoring URLs for Strict Mode site blocking.
+
+## 📄 License
+
+MIT
