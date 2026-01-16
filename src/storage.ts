@@ -10,6 +10,7 @@ export interface TimerState {
   timeLeft: number; // Remaining seconds (timer) OR Elapsed seconds (stopwatch)
   activeTaskId: string | null;
   type: TimerType;
+  isRinging: boolean;
 }
 
 export interface Task {
@@ -67,6 +68,7 @@ export const defaultTimer: TimerState = {
   timeLeft: 25 * 60,
   activeTaskId: null,
   type: 'timer',
+  isRinging: false,
 };
 
 export function getStorage(): Promise<LocalStorage> {

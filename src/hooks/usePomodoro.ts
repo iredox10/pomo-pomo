@@ -192,6 +192,18 @@ export function usePomodoro() {
     });
   };
 
+  const stopAlarm = async () => {
+    // 1. Clear ringing flag in storage
+    const { timer: latestTimer } = await getStorage();
+    await setStorage({
+        timer: { ...latestTimer, isRinging: false }
+    });
+    setTimer(prev => ({ ...prev, isRinging: false }));
+
+    // 2. Stop actual sound
+    chrome.runtime.sendMessage({ type: 'STOP_SOUND' });
+  };
+
   return {
     timer,
     timeLeft: displayTime,
@@ -200,6 +212,7 @@ export function usePomodoro() {
     resetTimer,
     setMode,
     setType,
-    startTask
+    startTask,
+    stopAlarm
   };
 }

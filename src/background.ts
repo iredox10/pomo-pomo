@@ -80,7 +80,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
         mode: nextMode,
         duration: nextDuration,
         timeLeft: nextDuration * 60,
-        startTime: shouldAutoStart ? Date.now() : null
+        startTime: shouldAutoStart ? Date.now() : null,
+        isRinging: true
     };
 
     // If auto-starting, we need to set the new alarm immediately
