@@ -1,12 +1,12 @@
 import { usePomodoro } from '../hooks/usePomodoro';
 import { useTasks } from '../hooks/useTasks';
-import { Play, Pause, RotateCcw, SkipForward, Timer as TimerIcon, Watch, BellOff } from 'lucide-react';
+import { Play, Pause, RotateCcw, SkipForward, Timer as TimerIcon, Watch } from 'lucide-react';
 import clsx from 'clsx';
 import { TimerMode } from '../storage';
 import { useEffect } from 'react';
 
 export function TimerView() {
-  const { timer, timeLeft, startTimer, pauseTimer, resetTimer, setMode, setType, stopAlarm } = usePomodoro();
+  const { timer, timeLeft, startTimer, pauseTimer, resetTimer, setMode, setType } = usePomodoro();
   const { tasks, activeTaskId } = useTasks();
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
@@ -16,9 +16,7 @@ export function TimerView() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault();
-        if (timer.isRinging) {
-            stopAlarm?.();
-        } else if (timer.status === 'running') {
+        if (timer.status === 'running') {
             pauseTimer();
         } else {
             startTimer();
@@ -28,7 +26,7 @@ export function TimerView() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [timer.status, startTimer, pauseTimer, timer.isRinging, stopAlarm]);
+  }, [timer.status, startTimer, pauseTimer]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -55,21 +53,6 @@ export function TimerView() {
   return (
     <div className="flex flex-col items-center justify-center h-full bg-gray-900 text-white p-6 relative">
       
-      {/* Alarm Overlay */}
-      {timer.isRinging && (
-          <div className="absolute inset-0 z-50 bg-gray-900/90 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in">
-              <div className="text-6xl mb-8 animate-bounce">🔔</div>
-              <h2 className="text-2xl font-bold mb-8">Time's Up!</h2>
-              <button 
-                onClick={stopAlarm}
-                className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-full font-bold text-lg flex items-center gap-3 shadow-lg hover:scale-105 transition-all"
-              >
-                  <BellOff className="w-6 h-6" />
-                  Stop Alarm
-              </button>
-          </div>
-      )}
-
       {/* Timer Type Toggle */}
       <div className="absolute top-4 right-4 flex bg-gray-800 rounded-lg p-1">
         <button 

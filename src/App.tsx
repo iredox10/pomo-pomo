@@ -4,13 +4,15 @@ import { TaskView } from './components/TaskView';
 import { StatsView } from './components/StatsView';
 import { SettingsView } from './components/SettingsView';
 import { AlarmsView } from './components/AlarmsView';
-import { Timer, CheckSquare, BarChart2, Settings, AlarmClock } from 'lucide-react';
+import { Timer, CheckSquare, BarChart2, Settings, AlarmClock, BellOff } from 'lucide-react';
+import { usePomodoro } from './hooks/usePomodoro';
 import clsx from 'clsx';
 
 export type View = 'timer' | 'tasks' | 'alarms' | 'stats' | 'settings';
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('timer');
+  const { timer, stopAlarm } = usePomodoro();
 
   const renderView = () => {
     switch (currentView) {
@@ -32,8 +34,23 @@ function App() {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden relative">
       
+      {/* Global Alarm Overlay */}
+      {timer.isRinging && (
+          <div className="absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in">
+              <div className="text-6xl mb-8 animate-bounce">🔔</div>
+              <h2 className="text-2xl font-bold mb-8">Alarm Ringing!</h2>
+              <button 
+                onClick={stopAlarm}
+                className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-full font-bold text-lg flex items-center gap-3 shadow-lg hover:scale-105 transition-all"
+              >
+                  <BellOff className="w-6 h-6" />
+                  Stop
+              </button>
+          </div>
+      )}
+
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden relative">
         {renderView()}
